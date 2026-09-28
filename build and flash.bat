@@ -116,6 +116,7 @@ if errorlevel 1 (
 
     echo [SUCCESS] Firmware done!
 
+    if exist main.ihx move /y main.ihx build\ > nul
 )
 
 goto end
