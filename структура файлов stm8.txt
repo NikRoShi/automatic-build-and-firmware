@@ -1,0 +1,10 @@
+[stm8]
+ ├── lib/  
+ |    ├── pwm.c
+ |    └── pwm.h
+ └── sketches/
+      ├── sketc1
+      └── sketch2
+             ├── build/             
+             ├── main.c             
+             └── build_and_flash.bat
