@@ -11,7 +11,7 @@ set PROGRAMMER=ST-LINK
 set INTERFACE=SWIM
 
 :: Путь к утилите прошивки STVP (проверьте, правильный ли у вас путь)
-set STVP_PATH="C:\Program Files\STMicroelectronics\st_toolset\stvp\STVP_CmdLine.exe"
+set STVP_PATH="C:\Program Files (x86)\STMicroelectronics\st_toolset\stvp\STVP_CmdLine.exe"
 
 :: =================================================================
 
@@ -48,11 +48,11 @@ set
 
 :: Цикл по всем .c файлам в папке lib. Компилируем каждый файл по отдельности в папку build.
 
-for %%f in (lib\*.c) do (
+for %%f in (..\..\lib\*.c) do (
 
     echo [BUILD] Compiling library file: %%~nxf
 
-    sdcc -mstm8 -c -I. -Ilib "%%f" -o "build\%%~nf.rel"
+    sdcc -mstm8 -c -I. -I..\..\lib "%%f" -o "build\%%~nf.rel"
 
     if errorlevel 1 goto error_end
 
@@ -66,7 +66,7 @@ for %%f in (lib\*.c) do (
 
 echo [BUILD] Compiling main.c...
 
-sdcc -mstm8 -c -I. -Ilib main.c -o build\main.rel
+sdcc -mstm8 -c -I. -I..\..\lib main.c -o build\main.rel
 
 if errorlevel 1 goto error_end
 
@@ -100,7 +100,7 @@ echo [FLASH] Starting flash device...
 
 
 :: Вызываем утилиту STVP через полный путь для прошивки микроконтроллера
-%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=USB -ProgMode=%INTERFACE% -FileProg="main.ihx"
+%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=USB -ProgMode=%INTERFACE% -FileProg="main.ihx" -no_loop
 
 
 
@@ -118,7 +118,7 @@ if errorlevel 1 (
 
     if exist main.ihx move /y main.ihx build\ > nul
 )
-
+color 2F
 goto end
 
 
@@ -126,13 +126,12 @@ goto end
 :: Точка перехода в случае ошибки сборки
 
 :error_end
-
 echo.
+color 4F
 echo [ERROR] build is crushed!
 
 
 
 :end
-
 echo.
 pause
