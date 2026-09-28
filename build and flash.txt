@@ -100,7 +100,7 @@ echo [FLASH] Starting flash device...
 
 
 :: Вызываем утилиту STVP через полный путь для прошивки микроконтроллера
-%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=%INTERFACE% -ProgMode=CHARGE -FileProg="main.ihx"
+%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=USB -ProgMode=%INTERFACE% -FileProg="main.ihx"
 
 
 
