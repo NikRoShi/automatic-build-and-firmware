@@ -11,7 +11,8 @@ set PROGRAMMER=ST-LINK
 set INTERFACE=SWIM
 
 :: Путь к утилите прошивки STVP (проверьте, правильный ли у вас путь)
-set STVP_PATH="C:\Program Files (x86)\STMicroelectronics\st_toolset\stvp\STVP_CmdLine.exe"
+
+set STVP_PATH="C:\Program Files\STMicroelectronics\st_toolset\stvp\STVP_CmdLine.exe"
 
 :: =================================================================
 
@@ -54,7 +55,7 @@ for %%f in (..\..\lib\*.c) do (
 
     sdcc -mstm8 -c -I. -I..\..\lib "%%f" -o "build\%%~nf.rel"
 
-    if errorlevel 1 goto error_end
+    if errorlevel 1 goto build_error
 
     call set "REL_FILES=%%REL_FILES%% "build\%%~nf.rel""
 
@@ -68,7 +69,7 @@ echo [BUILD] Compiling main.c...
 
 sdcc -mstm8 -c -I. -I..\..\lib main.c -o build\main.rel
 
-if errorlevel 1 goto error_end
+if errorlevel 1 goto build_error
 
 
 
@@ -77,7 +78,7 @@ if errorlevel 1 goto error_end
 echo [BUILD] Linking all files together...
 
 sdcc -mstm8 build\main.rel %REL_FILES% -o main.ihx
-if errorlevel 1 goto error_end
+if errorlevel 1 goto build_error
 
 
 
@@ -100,38 +101,66 @@ echo [FLASH] Starting flash device...
 
 
 :: Вызываем утилиту STVP через полный путь для прошивки микроконтроллера
-%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=USB -ProgMode=%INTERFACE% -FileProg="main.ihx" -no_loop
+cmd /a /c "%STVP_PATH% -BoardName=%PROGRAMMER% -Device=%MCU% -Port=USB -ProgMode=%INTERFACE% -FileProg="main.ihx" -no_loop -verif" > flash_output.tmp
+type flash_output.tmp
+
+:: Ищем в файле лога маркер "Cannot" (без учета регистра букв)
+
+findstr /I /C:"Cannot" flash_output.tmp > nul
+
+if %errorlevel% equ 0 goto flash_error
 
 
 
-if errorlevel 1 (
+:: Ищем в файле лога маркер "fail" (без учета регистра букв)
 
-    echo.
+findstr /I /C:"fail" flash_output.tmp > nul
 
-    echo [ERROR] Device could not be flashed!
+if %errorlevel% equ 0 goto flash_error
 
-) else (
+echo [SUCCESS] Firmware done!
 
-    echo.
-
-    echo [SUCCESS] Firmware done!
-
-    if exist main.ihx move /y main.ihx build\ > nul
-)
-color 2F
 goto end
 
 
 
 :: Точка перехода в случае ошибки сборки
 
-:error_end
-echo.
+:build_error
 color 4F
+echo.
 echo [ERROR] build is crushed!
 
+pause
 
 
+exit
+
+:: Точка входа в случае ошибки прошивки
+:flash_error
+if exist main.ihx move /y main.ihx build\ > nul
+
+:: Удаляем файл с результатами
+if exist flash_output.tmp del /f /q flash_output.tmp
+if exist Result.log del /f /q Result.log
+
+color 4F
+echo.
+
+echo [ERROR] Device could not be flashed!
+pause
+
+exit
+
+:: Точка входа если всё успешно
 :end
+if exist main.ihx move /y main.ihx build\ > nul
+
+:: Удаляем файл с результатами
+if exist flash_output.tmp del /f /q flash_output.tmp
+if exist Result.log del /f /q Result.log
+
+color 2F
 echo.
 pause
+exit
